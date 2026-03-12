@@ -49,6 +49,9 @@ function wrapForPreview(
     processed = processed.replace(/^export\s+default\s+\w+;?\s*$/gm, "");
     processed = processed.replace(/^export\s+/gm, "");
 
+    // Escape </script> to prevent script block termination
+    processed = processed.replace(/<\/script>/gi, "<\\/script>");
+
     return `<!DOCTYPE html>
 <html><head>
 <meta charset="UTF-8" />

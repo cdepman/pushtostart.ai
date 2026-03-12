@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { SITES_DOMAIN } from "@/lib/constants";
 import { Loader2, Check, X } from "lucide-react";
 
@@ -13,7 +13,17 @@ interface DeployFormProps {
   onDescriptionChange: (description: string) => void;
   onDeploy: () => void;
   isDeploying: boolean;
+  isRedeploy?: boolean;
   errors: Record<string, string>;
+}
+
+function titleToSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 export function DeployForm({
@@ -25,45 +35,102 @@ export function DeployForm({
   onDescriptionChange,
   onDeploy,
   isDeploying,
+  isRedeploy = false,
   errors,
 }: DeployFormProps) {
   const [slugStatus, setSlugStatus] = useState<
-    "idle" | "checking" | "available" | "taken"
+    "idle" | "checking" | "available" | "owned" | "taken"
   >("idle");
+  const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
-  const checkSlugAvailability = useCallback(async (slugToCheck: string) => {
-    if (!slugToCheck || slugToCheck.length < 3) {
-      setSlugStatus("idle");
-      return;
+  // On redeploy, slug is already set and should not auto-generate
+  const initializedRef = useRef(isRedeploy);
+  useEffect(() => {
+    if (isRedeploy) {
+      setSlugManuallyEdited(true);
+      initializedRef.current = true;
     }
+  }, [isRedeploy]);
 
-    setSlugStatus("checking");
+  const checkSlugAvailability = useCallback(
+    async (slugToCheck: string) => {
+      if (!slugToCheck || slugToCheck.length < 3) {
+        setSlugStatus("idle");
+        return;
+      }
 
-    try {
-      const res = await fetch(`/api/sites/${slugToCheck}`);
-      setSlugStatus(res.status === 404 ? "available" : "taken");
-    } catch {
-      setSlugStatus("idle");
-    }
-  }, []);
+      if (isRedeploy) {
+        setSlugStatus("owned");
+        return;
+      }
+
+      setSlugStatus("checking");
+
+      try {
+        const res = await fetch(`/api/sites/${slugToCheck}`);
+        if (res.status === 404) {
+          setSlugStatus("available");
+        } else if (res.ok) {
+          setSlugStatus("owned");
+        } else if (res.status === 403) {
+          setSlugStatus("taken");
+        } else {
+          setSlugStatus("available");
+        }
+      } catch {
+        setSlugStatus("idle");
+      }
+    },
+    [isRedeploy]
+  );
 
   useEffect(() => {
+    if (isRedeploy) {
+      setSlugStatus("owned");
+      return;
+    }
     const timeout = setTimeout(() => {
       if (slug.length >= 3) {
         checkSlugAvailability(slug);
       }
     }, 500);
     return () => clearTimeout(timeout);
-  }, [slug, checkSlugAvailability]);
+  }, [slug, checkSlugAvailability, isRedeploy]);
+
+  const handleTitleChange = (value: string) => {
+    onTitleChange(value);
+
+    // Auto-generate slug from title unless user manually edited it
+    if (!slugManuallyEdited && !isRedeploy) {
+      onSlugChange(titleToSlug(value));
+    }
+  };
 
   const handleSlugChange = (value: string) => {
-    // Only allow lowercase, numbers, and hyphens
     const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, "");
     onSlugChange(sanitized);
+    setSlugManuallyEdited(true);
   };
+
+  const canDeploy = slugStatus !== "taken" && slugStatus !== "checking";
 
   return (
     <div className="space-y-4">
+      {/* Title */}
+      <div>
+        <label className="mb-1.5 block text-sm font-medium">Title</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => handleTitleChange(e.target.value)}
+          placeholder="My Awesome App"
+          className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+        />
+        {errors.title && (
+          <p className="mt-1 text-xs text-red-400">{errors.title}</p>
+        )}
+      </div>
+
       {/* Slug */}
       <div>
         <label className="mb-1.5 block text-sm font-medium">Site name</label>
@@ -73,14 +140,15 @@ export function DeployForm({
             value={slug}
             onChange={(e) => handleSlugChange(e.target.value)}
             placeholder="my-cool-app"
-            className="flex-1 rounded-l-lg border border-border bg-muted px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
+            disabled={isRedeploy}
+            className="flex-1 rounded-l-lg border border-border bg-muted px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30 disabled:opacity-60"
           />
           <div className="flex items-center gap-1 rounded-r-lg border border-l-0 border-border bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
             .{SITES_DOMAIN}
             {slugStatus === "checking" && (
               <Loader2 size={14} className="animate-spin" />
             )}
-            {slugStatus === "available" && (
+            {(slugStatus === "available" || slugStatus === "owned") && (
               <Check size={14} className="text-green-500" />
             )}
             {slugStatus === "taken" && (
@@ -96,20 +164,10 @@ export function DeployForm({
             This site name is already taken
           </p>
         )}
-      </div>
-
-      {/* Title */}
-      <div>
-        <label className="mb-1.5 block text-sm font-medium">Title</label>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => onTitleChange(e.target.value)}
-          placeholder="My Awesome App"
-          className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
-        />
-        {errors.title && (
-          <p className="mt-1 text-xs text-red-400">{errors.title}</p>
+        {slugStatus === "owned" && !isRedeploy && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            You own this slug — launching will update the existing site
+          </p>
         )}
       </div>
 
@@ -128,19 +186,21 @@ export function DeployForm({
         />
       </div>
 
-      {/* Deploy button */}
+      {/* Launch button */}
       <button
         onClick={onDeploy}
-        disabled={isDeploying || slugStatus === "taken"}
+        disabled={isDeploying || !canDeploy}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-50"
       >
         {isDeploying ? (
           <>
             <Loader2 size={16} className="animate-spin" />
-            Deploying...
+            Launching...
           </>
+        ) : isRedeploy ? (
+          "Relaunch"
         ) : (
-          "Deploy"
+          "Launch"
         )}
       </button>
 

@@ -1,26 +1,90 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect, useCallback, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CodeEditor } from "@/components/editor/code-editor";
 import { PreviewPane } from "@/components/editor/preview-pane";
 import { DeployForm } from "@/components/editor/deploy-form";
+import { SharePreview } from "@/components/editor/share-preview";
 import { Navbar } from "@/components/shared/navbar";
 import { ExternalLink, PartyPopper } from "lucide-react";
 import { SITES_DOMAIN } from "@/lib/constants";
+import { extractTitle } from "@/lib/artifact/detect";
 
 export default function NewSitePage() {
+  return (
+    <Suspense>
+      <NewSitePageInner />
+    </Suspense>
+  );
+}
+
+function NewSitePageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redeploySlug = searchParams.get("redeploy");
+
   const [code, setCode] = useState("");
   const [slug, setSlug] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isDeploying, setIsDeploying] = useState(false);
+  const [isRedeploy, setIsRedeploy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [deployResult, setDeployResult] = useState<{
     url: string;
     slug: string;
   } | null>(null);
+  const titleManuallyEdited = useRef(false);
+
+  // Auto-extract title from pasted code and generate slug
+  const handleCodeChange = useCallback(
+    (newCode: string) => {
+      setCode(newCode);
+
+      if (!titleManuallyEdited.current && !isRedeploy) {
+        const extracted = extractTitle(newCode);
+        if (extracted) {
+          setTitle(extracted);
+          // Also auto-generate slug from extracted title
+          const autoSlug = extracted
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "");
+          setSlug(autoSlug);
+        }
+      }
+    },
+    [isRedeploy]
+  );
+
+  const handleTitleChange = useCallback((newTitle: string) => {
+    setTitle(newTitle);
+    titleManuallyEdited.current = true;
+  }, []);
+
+  // Prefill from existing site when redeploying
+  useEffect(() => {
+    if (!redeploySlug) return;
+
+    async function loadExistingSite() {
+      try {
+        const res = await fetch(`/api/sites/${redeploySlug}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setSlug(data.site.slug);
+        setTitle(data.site.title);
+        setDescription(data.site.description || "");
+        setCode(data.site.sourceCode);
+        setIsRedeploy(true);
+      } catch {
+        // ignore — user can still deploy fresh
+      }
+    }
+    loadExistingSite();
+  }, [redeploySlug]);
 
   const handleDeploy = async () => {
     setErrors({});
@@ -48,7 +112,7 @@ export default function NewSitePage() {
           }
           setErrors(errMap);
         } else {
-          setErrors({ general: data.error || "Deployment failed" });
+          setErrors({ general: data.error || "Launch failed" });
         }
         return;
       }
@@ -99,10 +163,12 @@ export default function NewSitePage() {
                   setSlug("");
                   setTitle("");
                   setDescription("");
+                  setIsRedeploy(false);
+                  titleManuallyEdited.current = false;
                 }}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
               >
-                Deploy Another
+                Launch Another
               </button>
             </div>
           </div>
@@ -115,32 +181,39 @@ export default function NewSitePage() {
     <>
       <Navbar />
       <div className="mx-auto max-w-7xl px-6 py-6">
-        <h1 className="mb-1 text-2xl font-bold">Deploy New Artifact</h1>
+        <h1 className="mb-1 text-2xl font-bold">
+          {isRedeploy ? `Relaunch ${slug}` : "Launch New Site"}
+        </h1>
         <p className="mb-6 text-sm text-muted-foreground">
-          Paste your Claude artifact code, preview it, and ship it.
+          {isRedeploy
+            ? "Update the code and relaunch."
+            : "Paste your code here, preview it, and ship it."}
         </p>
 
         <div className="grid gap-6 lg:grid-cols-2" style={{ height: "60vh" }}>
-          {/* Code editor */}
-          <CodeEditor value={code} onChange={setCode} />
-
-          {/* Preview */}
+          <CodeEditor value={code} onChange={handleCodeChange} />
           <PreviewPane code={code} title={title || slug || "Preview"} />
         </div>
 
-        {/* Deploy config */}
-        <div className="mx-auto mt-6 max-w-lg">
+        <div className="mx-auto mt-6 grid max-w-3xl items-start gap-8 lg:grid-cols-[1fr_auto]">
           <DeployForm
             slug={slug}
             title={title}
             description={description}
             onSlugChange={setSlug}
-            onTitleChange={setTitle}
+            onTitleChange={handleTitleChange}
             onDescriptionChange={setDescription}
             onDeploy={handleDeploy}
             isDeploying={isDeploying}
+            isRedeploy={isRedeploy}
             errors={errors}
           />
+          <div className="hidden lg:block">
+            <SharePreview
+              slug={slug}
+              title={title}
+            />
+          </div>
         </div>
       </div>
     </>

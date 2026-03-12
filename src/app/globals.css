@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  color-scheme: dark;
   --background: #06080d;
   --foreground: #e2e4e9;
   --primary: #6366f1;
@@ -32,70 +33,3 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Clerk dark theme overrides */
-.cl-card,
-.cl-footer,
-.cl-footerAction,
-.cl-footerAction__signUp,
-.cl-footerAction__signIn,
-.cl-signIn-root,
-.cl-signUp-root {
-  background: #13151d !important;
-  color: #e2e4e9 !important;
-}
-
-/* All text inside Clerk components */
-.cl-card h1,
-.cl-card h2,
-.cl-card h3,
-.cl-card p,
-.cl-card label,
-.cl-card span,
-.cl-headerTitle,
-.cl-headerSubtitle {
-  color: #e2e4e9 !important;
-}
-
-.cl-headerSubtitle,
-.cl-footerAction span,
-.cl-formFieldLabel,
-.cl-dividerText {
-  color: #9ca3af !important;
-}
-
-/* Social / OAuth buttons */
-.cl-socialButtonsBlockButton,
-.cl-socialButtonsIconButton {
-  background: #1a1d27 !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: #e2e4e9 !important;
-}
-
-.cl-socialButtonsBlockButton:hover,
-.cl-socialButtonsIconButton:hover {
-  background: #242736 !important;
-}
-
-/* Form inputs */
-.cl-formFieldInput,
-.cl-phoneNumberInput {
-  background: #1a1d27 !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  color: #e2e4e9 !important;
-}
-
-/* Divider */
-.cl-dividerLine {
-  background: rgba(255, 255, 255, 0.08) !important;
-}
-
-/* Links */
-.cl-footerActionLink {
-  color: #6366f1 !important;
-}
-
-/* Primary button */
-.cl-formButtonPrimary {
-  background: #6366f1 !important;
-  color: #fff !important;
-}

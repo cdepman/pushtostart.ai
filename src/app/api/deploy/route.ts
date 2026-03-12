@@ -5,13 +5,14 @@ import { wrapArtifact } from "@/lib/artifact/wrap";
 import { validateDeployInput } from "@/lib/artifact/validate";
 import {
   getSiteBySlug,
+  getSitesByUserId,
   createSite,
   updateSite,
   createDeployment,
+  deleteSite,
 } from "@/lib/db/queries";
-import { uploadSiteToR2 } from "@/lib/cloudflare/r2";
+import { uploadSiteToR2, deleteSiteFromR2 } from "@/lib/cloudflare/r2";
 import { SITES_DOMAIN, MAX_SITES_FREE_TIER } from "@/lib/constants";
-import { getSitesByUserId } from "@/lib/db/queries";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -34,7 +35,11 @@ export async function POST(req: NextRequest) {
 
   if (existingSite && !isRedeploy) {
     return NextResponse.json(
-      { errors: [{ field: "slug", message: "This site name is already taken" }] },
+      {
+        errors: [
+          { field: "slug", message: "This site name is already taken" },
+        ],
+      },
       { status: 409 }
     );
   }
@@ -66,14 +71,11 @@ export async function POST(req: NextRequest) {
   });
 
   try {
-    // Upload to R2
-    await uploadSiteToR2(slug, wrappedHtml);
-
+    // DB first, then R2 — if DB fails, nothing is orphaned in R2
     let site;
     let version: number;
 
     if (isRedeploy) {
-      // Update existing site
       version = existingSite.currentVersion + 1;
       site = await updateSite(slug, {
         title,
@@ -83,7 +85,6 @@ export async function POST(req: NextRequest) {
         currentVersion: version,
       });
     } else {
-      // Create new site
       version = 1;
       site = await createSite({
         userId,
@@ -95,15 +96,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Create deployment record
     const deployment = await createDeployment({
       siteId: site!.id,
       version,
       sourceCode,
       artifactType,
       wrappedHtml,
-      status: "deployed",
+      status: "deploying",
     });
+
+    // Upload to R2 — if this fails, roll back the DB records
+    try {
+      await uploadSiteToR2(slug, wrappedHtml);
+    } catch (r2Error) {
+      console.error("R2 upload failed, rolling back DB:", r2Error);
+      if (!isRedeploy) {
+        await deleteSite(slug);
+      }
+      throw r2Error;
+    }
 
     return NextResponse.json(
       {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ExternalLink, Globe } from "lucide-react";
+import { SITES_DOMAIN } from "@/lib/constants";
 
 interface SiteCardProps {
   slug: string;
@@ -46,7 +47,7 @@ export function SiteCard({
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span className="flex items-center gap-1 font-mono">
-          {slug}.shipartifact.com
+          {slug}.{SITES_DOMAIN}
           <ExternalLink
             size={10}
             className="opacity-0 transition-opacity group-hover:opacity-100"

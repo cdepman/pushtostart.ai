@@ -267,7 +267,7 @@ export default function UserJourneyMap() {
               ShipArtifact
             </h1>
             <p style={{ color: "#6B7280", fontSize: 16, lineHeight: 1.5 }}>
-              Build in Claude. Ship to the world. No login required.
+              Build in Chat. Ship to the world. No login required.
             </p>
           </div>
 

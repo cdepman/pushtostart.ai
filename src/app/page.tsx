@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { Navbar } from "@/components/shared/navbar";
-import { ArrowRight, Code, Eye, Globe } from "lucide-react";
+import { CtaButton } from "@/components/landing/cta-button";
+import { Code, Eye, Globe } from "lucide-react";
 
 const STEPS = [
   {
@@ -19,7 +19,7 @@ const STEPS = [
     icon: Globe,
     title: "Ship It",
     description:
-      "Pick a name, hit deploy. Your site is live at yourapp.shipartifact.com in seconds.",
+      "Pick a name, hit launch. Your site is live at yourapp.shipartifact.com in seconds.",
   },
 ];
 
@@ -46,30 +46,26 @@ export default function LandingPage() {
           </div>
 
           <h1 className="mb-6 text-5xl font-bold leading-tight tracking-tight sm:text-6xl">
-            Build in Claude.
+            Build in Chat.
             <br />
             <span className="text-primary">Ship to the world.</span>
           </h1>
 
           <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Deploy your Claude artifacts as live websites in seconds. Paste your
+            Launch your Claude artifacts as live websites in seconds. Paste your
             code, pick a name, and get a URL. No config, no setup, no
             infrastructure.
           </p>
 
-          <div className="flex justify-center gap-4">
-            <Link
-              href="/sign-up"
-              className="flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-            >
-              Get Started
-              <ArrowRight size={16} />
-            </Link>
+          <div className="flex flex-wrap justify-center gap-4">
+            <CtaButton label="Get Started" />
+          </div>
+          <div className="mt-4 flex justify-center">
             <a
               href="#how-it-works"
-              className="rounded-xl border border-border px-8 py-3 text-sm font-medium transition-colors hover:bg-muted"
+              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              See How It Works
+              See how it works &darr;
             </a>
           </div>
         </div>
@@ -143,19 +139,13 @@ export default function LandingPage() {
       <section className="border-t border-border py-20">
         <div className="mx-auto max-w-2xl px-6 text-center">
           <h2 className="mb-4 text-3xl font-bold">
-            Deploy your first artifact
+            Launch your first artifact
           </h2>
           <p className="mb-8 text-muted-foreground">
             Free during beta. 3 sites on your own subdomain. No credit card
             required.
           </p>
-          <Link
-            href="/sign-up"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-          >
-            Start Shipping
-            <ArrowRight size={16} />
-          </Link>
+          <CtaButton label="Start Shipping" />
         </div>
       </section>
 

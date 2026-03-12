@@ -9,14 +9,14 @@ export function EmptyState() {
       </div>
       <h2 className="mb-2 text-xl font-semibold">No sites yet</h2>
       <p className="mb-6 max-w-sm text-sm text-muted-foreground">
-        Deploy your first Claude artifact as a live website. Paste your code,
+        Launch your first Claude artifact as a live website. Paste your code,
         pick a name, and ship it in seconds.
       </p>
       <Link
         href="/new"
         className="rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
       >
-        Deploy your first artifact
+        Launch your first artifact
       </Link>
     </div>
   );

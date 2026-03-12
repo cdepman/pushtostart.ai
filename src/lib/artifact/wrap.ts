@@ -1,4 +1,5 @@
 import { ArtifactType } from "./detect";
+import { SITES_DOMAIN, APP_URL } from "@/lib/constants";
 
 function escapeHtml(str: string): string {
   return str
@@ -36,6 +37,11 @@ function extractComponentName(code: string): string {
   return "App";
 }
 
+function escapeScriptClose(code: string): string {
+  // Prevent </script> in artifact code from terminating the <script> block
+  return code.replace(/<\/script>/gi, "<\\/script>");
+}
+
 function prepareJsxCode(code: string): string {
   let processed = code;
 
@@ -59,6 +65,9 @@ function prepareJsxCode(code: string): string {
 
   // Remove other export statements
   processed = processed.replace(/^export\s+/gm, "");
+
+  // Escape </script> to prevent XSS via script block termination
+  processed = escapeScriptClose(processed);
 
   return processed;
 }
@@ -87,7 +96,11 @@ export function wrapJsxArtifact(
   <meta name="description" content="${escapeHtml(desc)}" />
   <meta property="og:title" content="${escapeHtml(meta.title)}" />
   <meta property="og:description" content="${escapeHtml(desc)}" />
-  <meta property="og:url" content="https://${meta.slug}.shipartifact.com" />
+  <meta property="og:url" content="https://${meta.slug}.${SITES_DOMAIN}" />
+  <meta property="og:image" content="${APP_URL}/api/og" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -149,7 +162,11 @@ export function wrapHtmlArtifact(
   <meta name="description" content="${escapeHtml(desc)}" />
   <meta property="og:title" content="${escapeHtml(meta.title)}" />
   <meta property="og:description" content="${escapeHtml(desc)}" />
-  <meta property="og:url" content="https://${meta.slug}.shipartifact.com" />
+  <meta property="og:url" content="https://${meta.slug}.${SITES_DOMAIN}" />
+  <meta property="og:image" content="${APP_URL}/api/og" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
 </head>
 <body>
   ${code}

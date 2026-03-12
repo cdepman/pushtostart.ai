@@ -64,6 +64,20 @@ export async function PATCH(
   const body = await req.json();
   const { title, description } = body;
 
+  if (title !== undefined && (!title || title.trim().length === 0)) {
+    return NextResponse.json(
+      { error: "Title cannot be empty" },
+      { status: 400 }
+    );
+  }
+
+  if (title !== undefined && title.length > 200) {
+    return NextResponse.json(
+      { error: "Title must be 200 characters or less" },
+      { status: 400 }
+    );
+  }
+
   const updated = await updateSite(slug, {
     ...(title !== undefined && { title }),
     ...(description !== undefined && { description }),
@@ -90,11 +104,13 @@ export async function DELETE(
 
   try {
     await deleteSiteFromR2(slug);
+    await deleteSite(slug);
+    return NextResponse.json({ deleted: true });
   } catch (error) {
-    console.error("Failed to delete from R2:", error);
+    console.error("Failed to delete site:", error);
+    return NextResponse.json(
+      { error: "Failed to delete site. Please try again." },
+      { status: 500 }
+    );
   }
-
-  await deleteSite(slug);
-
-  return NextResponse.json({ deleted: true });
 }

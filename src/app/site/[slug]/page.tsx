@@ -171,7 +171,7 @@ export default function SiteDetailPage() {
             className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
           >
             <RefreshCw size={14} />
-            Redeploy
+            Relaunch
           </Link>
           {showDeleteConfirm ? (
             <div className="flex items-center gap-2">

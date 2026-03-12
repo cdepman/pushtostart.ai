@@ -1,6 +1,6 @@
 # ShipArtifact
 
-Build in Claude. Ship to the world.
+Build in Chat. Ship to the world.
 
 Deploy your Claude artifacts as live websites in seconds. Paste your code, pick a name, get a URL.
 

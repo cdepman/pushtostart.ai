@@ -1,14 +1,15 @@
 import { Navbar } from "@/components/shared/navbar";
 import { CtaButton } from "@/components/landing/cta-button";
 import { PromptCopySection } from "@/components/landing/prompt-copy-section";
-import { Sparkles, Eye, Globe } from "lucide-react";
+import { Sparkles, Eye, Globe, UserX, Link } from "lucide-react";
 
 const STEPS = [
   {
     icon: Sparkles,
     title: "Create with Claude",
     description:
-      "Ask Claude to build something for you — a calculator, quiz, recipe page, or anything you can imagine.",
+      "Go to claude.ai (it's free) and ask it to build something for you. Copy one of our example prompts to get started.",
+    link: { label: "Open Claude \u2192", href: "https://claude.ai" },
   },
   {
     icon: Eye,
@@ -52,8 +53,8 @@ export default function LandingPage() {
           </h1>
 
           <p className="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Turn the things you make in Claude into real websites with their own
-            link. Just paste, preview, and publish — no technical skills needed.
+            Create amazing AI-powered apps with Claude (for free), then publish
+            them here so anyone can use them. No technical skills needed.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4">
@@ -93,8 +94,48 @@ export default function LandingPage() {
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {step.description}
                 </p>
+                {"link" in step && step.link && (
+                  <a
+                    href={(step.link as { href: string }).href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block text-sm font-medium text-primary transition-opacity hover:opacity-80"
+                  >
+                    {(step.link as { label: string }).label}
+                  </a>
+                )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Key benefits */}
+      <section className="border-t border-border py-14">
+        <div className="mx-auto grid max-w-3xl gap-6 px-6 sm:grid-cols-2">
+          <div className="flex gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <UserX size={20} className="text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold">No login required</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                Anyone with the link can use your creation instantly. No account
+                needed.
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+              <Link size={20} className="text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold">A clean link you can share</h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                Your creation gets its own short link you can text, post, or put
+                on a business card.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -133,14 +174,14 @@ export default function LandingPage() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {[
-              "Tip calculators & unit converters",
-              "Fun quizzes & trivia games",
-              "Personal portfolio pages",
-              "Charts & visual summaries",
-              "Simple games & puzzles",
-              "Handy everyday tools",
-              "Event pages & invitations",
-              "Interactive how-to guides",
+              "AI language tutors",
+              "Smart recipe generators",
+              "Personalized story creators",
+              "AI homework helpers",
+              "Custom chatbots",
+              "Interactive learning tools",
+              "AI writing assistants",
+              "Smart calculators & analyzers",
             ].map((item) => (
               <div
                 key={item}
@@ -161,8 +202,8 @@ export default function LandingPage() {
             Publish your first creation
           </h2>
           <p className="mb-8 text-muted-foreground">
-            Free while in beta. Publish up to 3 creations on your own link. No
-            credit card needed.
+            Free to create at claude.ai. Free to publish here. No credit card
+            needed.
           </p>
           <CtaButton label="Get Started Free" />
         </div>

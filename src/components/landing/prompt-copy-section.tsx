@@ -5,19 +5,19 @@ import { Clipboard, Check } from "lucide-react";
 
 const EXAMPLE_PROMPTS = [
   {
-    label: "Tip Calculator",
+    label: "Explain This Photo Like I'm 5",
     prompt:
-      "Build me a tip calculator with a clean, friendly design. It should let me enter the bill amount, choose a tip percentage, split between people, and show the total per person.",
+      "Build me an app where I can upload a photo or take a picture, and it looks at the photo and explains the main things it sees in simple words that a 5-year-old would understand. Make it playful and colorful with big text and friendly vibes. It should pick out the 2-3 most interesting things in the photo.",
   },
   {
-    label: "Fun Quiz",
+    label: "Recipe Inventor",
     prompt:
-      "Create a fun 10-question quiz about world geography. Give it a colorful design with a progress bar, score tracking, and a results screen at the end.",
+      "Build me a recipe generator. I type in whatever ingredients I have and it creates a complete recipe with steps, cook time, and difficulty rating. Give it a fun kitchen-themed design.",
   },
   {
-    label: "Recipe Page",
+    label: "Story Maker",
     prompt:
-      "Design a beautiful recipe page for chocolate chip cookies. Include an ingredients list with checkboxes, step-by-step instructions, and a timer button for the baking step.",
+      "Build me a children's bedtime story creator. I enter a character name, a favorite animal, and a magical place, and it writes a short illustrated story. Make it whimsical with big friendly text and soft colors.",
   },
 ];
 
@@ -39,6 +39,9 @@ export function PromptCopySection() {
         >
           <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-primary">
             {item.label}
+          </p>
+          <p className="mb-3 text-[11px] text-muted-foreground">
+            ✨ AI-powered — keeps working after you publish
           </p>
           <p className="mb-4 flex-1 text-sm leading-relaxed text-muted-foreground">
             &ldquo;{item.prompt}&rdquo;

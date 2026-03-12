@@ -8,7 +8,7 @@ export function Logo({ size = "default" }: { size?: "small" | "default" }) {
     <div className="flex items-center gap-2">
       <Rocket size={iconSize} className="text-primary" />
       <span className={`${textSize} font-bold tracking-tight`}>
-        Ship<span className="text-primary">Artifact</span>
+        Push<span className="text-primary">ToStart</span>
       </span>
     </div>
   );

@@ -192,7 +192,7 @@ export function DeployForm({
       {usesAi && (
         <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
           <Sparkles size={14} />
-          <span>This artifact uses AI — API calls will be proxied through ShipArtifact</span>
+          <span>This creation uses AI — API calls will be proxied through PushToStart</span>
         </div>
       )}
 

@@ -13,6 +13,19 @@
   --card-border: rgba(255, 255, 255, 0.06);
 }
 
+.theme-light {
+  color-scheme: light;
+  --background: #FAFAF8;
+  --foreground: #1a1a1a;
+  --primary: #6366f1;
+  --primary-foreground: #ffffff;
+  --muted: #f0eeeb;
+  --muted-foreground: #6b7280;
+  --border: rgba(0, 0, 0, 0.08);
+  --card: rgba(0, 0, 0, 0.02);
+  --card-border: rgba(0, 0, 0, 0.08);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

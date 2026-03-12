@@ -71,62 +71,36 @@ export async function GET() {
             zIndex: 1,
           }}
         >
-          {/* Code brackets decoration */}
+          {/* Badge */}
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "16px",
+              gap: "8px",
+              padding: "8px 20px",
+              borderRadius: "999px",
+              border: "1px solid rgba(99,102,241,0.2)",
+              background: "rgba(99,102,241,0.08)",
               marginBottom: "24px",
             }}
           >
-            <span
-              style={{
-                fontSize: "48px",
-                color: "rgba(99,102,241,0.4)",
-                fontWeight: 700,
-              }}
-            >
-              &lt;
-            </span>
             <div
               style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "50%",
+                backgroundColor: "#22c55e",
                 display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "8px 20px",
-                borderRadius: "12px",
-                border: "1px solid rgba(99,102,241,0.2)",
-                background: "rgba(99,102,241,0.08)",
               }}
-            >
-              <div
-                style={{
-                  width: "8px",
-                  height: "8px",
-                  borderRadius: "50%",
-                  backgroundColor: "#22c55e",
-                  display: "flex",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: "16px",
-                  color: "rgba(255,255,255,0.5)",
-                  letterSpacing: "0.05em",
-                }}
-              >
-                LAUNCH
-              </span>
-            </div>
+            />
             <span
               style={{
-                fontSize: "48px",
-                color: "rgba(99,102,241,0.4)",
-                fontWeight: 700,
+                fontSize: "16px",
+                color: "rgba(255,255,255,0.5)",
+                letterSpacing: "0.05em",
               }}
             >
-              /&gt;
+              CREATE &amp; SHARE
             </span>
           </div>
 
@@ -141,7 +115,7 @@ export async function GET() {
               marginBottom: "8px",
             }}
           >
-            ShipArtifact
+            PushToStart
           </div>
 
           {/* Tagline */}
@@ -154,8 +128,8 @@ export async function GET() {
               gap: "12px",
             }}
           >
-            <span>Build in Chat.</span>
-            <span style={{ color: "#6366f1" }}>Ship to the world.</span>
+            <span>Create with Claude.</span>
+            <span style={{ color: "#6366f1" }}>Share with the world.</span>
           </div>
 
           {/* URL bar */}
@@ -194,7 +168,7 @@ export async function GET() {
                 color: "rgba(255,255,255,0.2)",
               }}
             >
-              .shipartifact.com
+              .pushtostart.ai
             </span>
           </div>
         </div>

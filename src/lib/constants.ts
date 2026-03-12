@@ -28,7 +28,7 @@ export const MAX_CODE_LENGTH = 500_000; // 500KB
 export const MAX_SITES_FREE_TIER = 3;
 
 export const SITES_DOMAIN =
-  process.env.NEXT_PUBLIC_SITES_DOMAIN || "shipartifact.com";
+  process.env.NEXT_PUBLIC_SITES_DOMAIN || "pushtostart.ai";
 
 export const APP_URL =
   process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";

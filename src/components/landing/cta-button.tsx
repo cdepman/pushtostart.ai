@@ -18,7 +18,7 @@ export function CtaButton({
       <div className={`flex items-center gap-3 ${className}`}>
         <Link
           href="/new"
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:opacity-90"
         >
           {label}
           <ArrowRight size={16} />
@@ -37,7 +37,7 @@ export function CtaButton({
   return (
     <Link
       href="/sign-up"
-      className={`inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 ${className}`}
+      className={`inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/25 transition-all hover:opacity-90 ${className}`}
     >
       {label}
       <ArrowRight size={16} />

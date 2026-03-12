@@ -3,29 +3,29 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ShipArtifact — Build in Chat. Ship to the world.",
+  title: "PushToStart — Create in Claude. Share with the world.",
   description:
-    "Launch your Claude artifacts as live websites in seconds. Paste your code, get a URL. No config, no setup.",
+    "Turn your Claude creations into live websites in seconds. Paste, preview, publish. No technical skills needed.",
   openGraph: {
-    title: "ShipArtifact",
-    description: "Launch your Claude artifacts as live websites in seconds.",
-    url: "https://shipartifact.com",
-    siteName: "ShipArtifact",
+    title: "PushToStart",
+    description: "Turn your Claude creations into live websites in seconds.",
+    url: "https://pushtostart.ai",
+    siteName: "PushToStart",
     type: "website",
     images: [
       {
-        url: "https://shipartifact.com/api/og",
+        url: "https://pushtostart.ai/api/og",
         width: 1200,
         height: 630,
-        alt: "ShipArtifact — Build in Chat. Ship to the world.",
+        alt: "PushToStart — Create in Claude. Share with the world.",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ShipArtifact",
-    description: "Launch your Claude artifacts as live websites in seconds.",
-    images: ["https://shipartifact.com/api/og"],
+    title: "PushToStart",
+    description: "Turn your Claude creations into live websites in seconds.",
+    images: ["https://pushtostart.ai/api/og"],
   },
 };
 

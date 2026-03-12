@@ -61,7 +61,9 @@ export function SharePreview({ slug, title }: SharePreviewProps) {
                 <path d="M7 1L1 7l6 6" stroke="#007AFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <div className="flex flex-1 flex-col items-center">
-                <div className="h-7 w-7 rounded-full bg-gradient-to-br from-[#007AFF] to-[#5856D6]" />
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-[#FF6B6B] to-[#ee5a24] text-[12px]">
+                  🙂
+                </div>
                 <span className="mt-0.5 text-[9px] text-black">Friend</span>
               </div>
               <div className="w-4" />
@@ -70,24 +72,24 @@ export function SharePreview({ slug, title }: SharePreviewProps) {
 
           {/* Chat area */}
           <div className="flex min-h-[340px] flex-col bg-white px-2.5 pb-3 pt-3">
-            {/* Received message */}
-            <div className="mb-2 max-w-[180px]">
-              <div className="rounded-2xl rounded-bl-md bg-[#e9e9eb] px-3 py-1.5">
-                <p className="text-[11px] leading-[1.35] text-black">
+            {/* Sent message — "check this out" */}
+            <div className="mb-1 ml-auto max-w-[180px]">
+              <div className="rounded-2xl rounded-br-md bg-[#007AFF] px-3 py-1.5">
+                <p className="text-[11px] leading-[1.35] text-white">
                   check this out
                 </p>
               </div>
             </div>
 
             {/* Sent message — the link preview card */}
-            <div className="mb-1 ml-auto max-w-[210px]">
-              <div className="overflow-hidden rounded-2xl rounded-br-md bg-[#007AFF]">
+            <div className="mb-3 ml-auto max-w-[210px]">
+              <div className="overflow-hidden rounded-2xl rounded-tr-md bg-[#007AFF]">
                 {/* OG image */}
                 <div className="relative h-[110px] overflow-hidden bg-[#06080d]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/api/og"
-                    alt="ShipArtifact OG preview"
+                    alt="PushToStart OG preview"
                     className="h-full w-full object-cover"
                   />
                 </div>
@@ -100,16 +102,10 @@ export function SharePreview({ slug, title }: SharePreviewProps) {
                   <p className="mt-[1px] truncate text-[11px] font-semibold leading-tight text-white">
                     {displayTitle}
                   </p>
+                  <p className="mt-[2px] truncate text-[9px] text-white/50">
+                    {displayUrl}
+                  </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Sent URL text */}
-            <div className="mb-3 ml-auto max-w-[210px]">
-              <div className="rounded-2xl rounded-tr-md bg-[#007AFF] px-3 py-1.5">
-                <p className="text-[10px] text-white/90">
-                  {displayUrl}
-                </p>
               </div>
             </div>
 

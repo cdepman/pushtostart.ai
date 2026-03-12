@@ -100,8 +100,8 @@ const FAVICON_LINK = `<link rel="icon" type="image/svg+xml" href="data:image/svg
 
 const BADGE_HTML = `
   <div style="position:fixed;bottom:8px;right:8px;opacity:0.5;font-size:11px;font-family:sans-serif;z-index:99999;">
-    <a href="https://shipartifact.com" target="_blank" rel="noopener" style="color:#888;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
-      Made with ShipArtifact
+    <a href="https://pushtostart.ai" target="_blank" rel="noopener" style="color:#888;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
+      Made with PushToStart
     </a>
   </div>`;
 

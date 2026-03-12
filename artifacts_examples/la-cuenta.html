@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Primary -->
+<title>La Cuenta — AI Bill Splitter · CDMX</title>
+<meta name="description" content="Split the restaurant bill instantly. Upload a receipt photo, type what you had in plain Spanish, and get your total. Powered by Claude AI.">
+
+<!-- Open Graph -->
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://lacuenta.app/">
+<meta property="og:title"       content="La Cuenta — AI Bill Splitter">
+<meta property="og:description" content="¿Cuánto debo? Sube el ticket, di lo que pediste, listo. Powered by Claude.">
+<meta property="og:image"       content="https://lacuenta.app/la-cuenta-og.png">
+<meta property="og:image:width"  content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt"   content="La Cuenta — cyberpunk AI bill splitter for CDMX">
+<meta property="og:locale"      content="es_MX">
+<meta property="og:site_name"   content="La Cuenta">
+
+<!-- Twitter / X -->
+<meta name="twitter:card"        content="summary_large_image">
+<meta name="twitter:title"       content="La Cuenta — AI Bill Splitter">
+<meta name="twitter:description" content="¿Cuánto debo? Sube el ticket, di lo que pediste, listo. Powered by Claude.">
+<meta name="twitter:image"       content="https://lacuenta.app/la-cuenta-og.png">
+
+<!-- WhatsApp / iMessage use og: tags above — no extras needed -->
+
+<!-- Favicon (inline SVG → data URI) -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧾</text></svg>">
+<style>
+  :root {
+    --bg:     #07040f;
+    --panel:  #0e0820;
+    --border: #2a1a4a;
+    --pink:   #ff2d78;
+    --cyan:   #00f0ff;
+    --yellow: #ffe040;
+    --green:  #39ff85;
+    --purple: #b060ff;
+    --dim:    #4a3570;
+    --muted:  #7a5fa0;
+    --text:   #f0e8ff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Courier New', monospace;
+    overflow-x: hidden;
+  }
+
+  .scanlines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px);
+  }
+
+  .glow-pink {
+    position: fixed; top: -15%; left: -15%; width: 55vw; height: 55vw;
+    border-radius: 50%; pointer-events: none; z-index: 0;
+    background: radial-gradient(circle, rgba(255,45,120,0.12) 0%, transparent 65%);
+  }
+  .glow-cyan {
+    position: fixed; bottom: -15%; right: -15%; width: 55vw; height: 55vw;
+    border-radius: 50%; pointer-events: none; z-index: 0;
+    background: radial-gradient(circle, rgba(0,240,255,0.10) 0%, transparent 65%);
+  }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 620px; margin: 0 auto; padding: 36px 20px;
+  }
+
+  /* HEADER */
+  .header { text-align: center; margin-bottom: 32px; }
+  .header .sub { font-size: 10px; letter-spacing: 0.5em; color: var(--cyan); margin-bottom: 10px; }
+  .header h1 {
+    font-size: clamp(40px, 10vw, 56px); font-weight: 700;
+    letter-spacing: 0.1em; line-height: 1;
+    background: linear-gradient(135deg, var(--pink) 0%, var(--yellow) 45%, var(--cyan) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .ver { font-size: 10px; color: var(--dim); margin-top: 8px; letter-spacing: 0.3em; }
+
+  .aztec {
+    display: flex; gap: 5px; justify-content: center;
+    margin: 14px 0; opacity: 0.6; font-size: 10px;
+  }
+
+  /* PANEL */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px;
+    position: relative;
+    margin-bottom: 16px;
+    box-shadow: 0 0 40px rgba(176,96,255,0.12);
+  }
+
+  .corner { position: absolute; width: 18px; height: 18px; }
+  .corner::before, .corner::after { content: ''; position: absolute; background: var(--cyan); }
+  .corner::before { width: 100%; height: 2px; top: 0; left: 0; }
+  .corner::after  { width: 2px; height: 100%; top: 0; left: 0; }
+  .corner.tr { top: 0; right: 0; transform: scaleX(-1); }
+  .corner.bl { bottom: 0; left: 0; transform: scaleY(-1); }
+  .corner.br { bottom: 0; right: 0; transform: scale(-1); }
+  .corner.tl { top: 0; left: 0; }
+
+  .tag {
+    font-size: 9px; letter-spacing: 0.4em;
+    margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tag::before { content: ''; display: block; width: 20px; height: 1px; background: currentColor; }
+  .tag::after  { content: ''; display: block; flex: 1; height: 1px; background: currentColor; opacity: 0.4; }
+
+  /* INPUTS */
+  input[type=text], input[type=number], textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 9px 12px;
+    border-radius: 2px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, textarea:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 8px rgba(0,240,255,0.35);
+  }
+  input::placeholder, textarea::placeholder { color: var(--dim); }
+  textarea { resize: vertical; line-height: 1.6; }
+
+  /* BUTTONS */
+  .btn-primary {
+    background: var(--purple); color: var(--bg); border: none;
+    padding: 14px 24px; border-radius: 2px; font-size: 11px;
+    cursor: pointer; letter-spacing: 0.2em;
+    font-family: 'Courier New', monospace; font-weight: 700;
+    box-shadow: 0 0 20px rgba(176,96,255,0.45);
+    width: 100%; margin-top: 12px;
+    transition: opacity 0.2s;
+  }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-primary.cyan  { background: var(--cyan);   box-shadow: 0 0 20px rgba(0,240,255,0.45); }
+  .btn-primary.pink  { background: var(--pink);   box-shadow: 0 0 20px rgba(255,45,120,0.45); }
+
+  .btn-ghost {
+    background: none; color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 8px 14px; border-radius: 2px; font-size: 10px;
+    letter-spacing: 0.15em; cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: border-color 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--muted); }
+  .btn-ghost.dashed { border-style: dashed; width: 100%; margin-top: 4px; }
+
+  /* ERROR */
+  .err {
+    color: var(--pink); font-size: 12px; margin-top: 12px;
+    padding: 10px 14px; border: 1px solid rgba(255,45,120,0.35);
+    border-radius: 2px; background: rgba(255,45,120,0.06);
+    letter-spacing: 0.04em; display: none;
+  }
+  .err.show { display: block; }
+
+  /* DROP ZONE */
+  .dropzone {
+    border: 2px dashed var(--dim); border-radius: 4px;
+    cursor: pointer; text-align: center; padding: 40px 20px;
+    background: rgba(0,240,255,0.03); margin-bottom: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .dropzone.has-image { padding: 0; border-color: rgba(0,240,255,0.5); box-shadow: 0 0 24px rgba(0,240,255,0.15); }
+  .dropzone:hover { border-color: var(--muted); }
+  .dropzone .icon { font-size: 36px; color: var(--dim); margin-bottom: 10px; }
+  .dropzone .hint { color: var(--muted); font-size: 12px; letter-spacing: 0.1em; }
+  .dropzone .hint span { color: var(--cyan); text-decoration: underline; }
+  .dropzone img { max-width: 100%; max-height: 300px; object-fit: contain; display: block; }
+
+  /* RECEIPT STRIP */
+  .receipt-strip { font-size: 10px; }
+  .receipt-strip .items { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .receipt-strip .item-tag {
+    padding: 3px 8px; border: 1px solid var(--border);
+    border-radius: 2px; color: var(--muted);
+  }
+  .receipt-strip .item-tag .qty { color: var(--dim); }
+  .receipt-strip .totals { display: flex; gap: 16px; font-size: 11px; color: var(--dim); flex-wrap: wrap; }
+  .receipt-strip .totals .total-val { color: var(--muted); }
+  .receipt-strip .totals .grand { color: var(--yellow); font-weight: 700; }
+
+  /* RESULT */
+  .result-amount {
+    font-size: 42px; font-weight: 700;
+    letter-spacing: -0.02em;
+    text-shadow: 0 0 24px currentColor;
+  }
+  .result-name { font-size: 20px; font-weight: 700; letter-spacing: 0.08em; }
+  .result-order { font-size: 11px; color: var(--dim); margin-top: 3px; font-style: italic; }
+  .result-lines { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 14px; }
+  .result-line {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--muted); padding: 3px 0;
+  }
+  .result-line.extra { color: var(--dim); }
+
+  /* SUMMARY */
+  .summary-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 7px 0; border-bottom: 1px solid var(--border);
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-name { font-size: 13px; font-weight: 700; }
+  .summary-order { font-size: 10px; color: var(--dim); margin-left: 8px; }
+  .summary-amt { font-size: 16px; font-weight: 700; }
+  .summary-footer {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--dim); margin-top: 10px;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+
+  .footer { text-align: center; margin-top: 28px; font-size: 9px; color: var(--dim); letter-spacing: 0.35em; }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .blink { animation: blink 0.8s step-end infinite; }
+
+  .hidden { display: none !important; }
+  .mt8  { margin-top: 8px; }
+  .mt12 { margin-top: 12px; }
+  .row  { display: flex; gap: 10px; align-items: center; }
+  .flex1 { flex: 1; }
+</style>
+</head>
+<body>
+
+
+<div class="scanlines"></div>
+<div class="glow-pink"></div>
+<div class="glow-cyan"></div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="sub">◈ SISTEMA DE DIVISIÓN ◈</div>
+    <h1>LA CUENTA</h1>
+    <div class="ver">CDMX · AI BILL SPLITTER · v2.0</div>
+    <div class="aztec">
+      <span style="color:#ff2d78">◆</span><span style="color:#00f0ff">◇</span><span style="color:#ffe040">◈</span>
+      <span style="color:#ff2d78">◇</span><span style="color:#00f0ff">◆</span><span style="color:#ffe040">◇</span>
+      <span style="color:#ff2d78">◈</span><span style="color:#00f0ff">◇</span><span style="color:#ffe040">◆</span>
+    </div>
+  </div>
+
+  <!-- RECEIPT PANEL -->
+  <div class="panel" id="receiptPanel">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+
+    <!-- Upload state -->
+    <div id="uploadState">
+      <div class="tag" style="color:var(--pink)">ESCANEAR RECIBO</div>
+
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <div class="icon">⬡</div>
+        <div class="hint">ARRASTRA O <span>SELECCIONA</span> LA FOTO DEL TICKET</div>
+        <div style="font-size:10px;color:var(--dim);margin-top:6px;letter-spacing:0.1em">JPG · PNG · HEIC</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+
+      <button class="btn-ghost hidden" id="changeImgBtn" onclick="clearImage()">↩ CAMBIAR IMAGEN</button>
+
+      <div class="err" id="scanErr"></div>
+      <button class="btn-primary" id="scanBtn" onclick="scanReceipt()" disabled>ESCANEAR →</button>
+    </div>
+
+    <!-- Loaded state -->
+    <div id="loadedState" class="hidden">
+      <div class="row" style="margin-bottom:12px">
+        <div class="tag flex1" style="color:var(--green);margin-bottom:0">✓ RECIBO CARGADO</div>
+        <button class="btn-ghost" onclick="resetAll()">NUEVO RECIBO</button>
+      </div>
+      <div class="receipt-strip">
+        <div class="items" id="itemTags"></div>
+        <div class="totals" id="receiptTotals"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INPUT / RESULT PANEL -->
+  <div class="panel hidden" id="inputPanel">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+
+    <!-- Input form -->
+    <div id="inputForm">
+      <div class="tag" style="color:var(--purple)" id="personTag">PRIMERA PERSONA</div>
+      <input type="text" id="nameInput" placeholder="TU NOMBRE" style="margin-bottom:10px">
+      <textarea id="orderInput" rows="3" placeholder="¿Qué pediste? Como quieras… ej: dos mezcalitas y los tacos de pastor"></textarea>
+      <div class="err" id="calcErr"></div>
+      <button class="btn-primary" id="calcBtn" onclick="calculate()">¿CUÁNTO DEBO? →</button>
+    </div>
+
+    <!-- Result display -->
+    <div id="resultDisplay" class="hidden">
+      <div class="tag" id="resultTag" style="color:var(--pink)">RESULTADO</div>
+      <div class="row" style="justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <div class="result-name" id="resultName"></div>
+          <div class="result-order" id="resultOrder"></div>
+        </div>
+        <div class="result-amount" id="resultAmount"></div>
+      </div>
+      <div class="result-lines" id="resultLines"></div>
+      <button class="btn-primary cyan" style="margin-top:16px" onclick="nextPerson()">SIGUIENTE PERSONA →</button>
+    </div>
+  </div>
+
+  <!-- SUMMARY PANEL -->
+  <div class="panel hidden" id="summaryPanel">
+    <div class="corner tl"></div><div class="corner br" style="transform:scale(-1)"></div>
+    <div class="tag" style="color:var(--yellow)">RESUMEN DE LA MESA</div>
+    <div id="summaryRows"></div>
+    <div class="summary-footer">
+      <span>TOTAL CALCULADO</span>
+      <span id="summaryTotal" style="color:var(--text)"></span>
+    </div>
+  </div>
+
+  <div class="footer">◆ POWERED BY CLAUDE · CIUDAD DE MÉXICO · ¡SALUD! ◆</div>
+</div>
+
+<script>
+
+const ACCENTS = ['#ff2d78','#00f0ff','#ffe040','#39ff85','#b060ff'];
+
+let receiptItems = [];
+let receiptMeta  = { subtotal: 0, tax: 0, tip: 0 };
+let results      = [];
+let imageBase64  = null;
+let imageType    = null;
+
+// ── file handling ─────────────────────────────────────────
+const dropzone   = document.getElementById('dropzone');
+const fileInput  = document.getElementById('fileInput');
+const scanBtn    = document.getElementById('scanBtn');
+const changeBtn  = document.getElementById('changeImgBtn');
+
+fileInput.addEventListener('change', e => loadFile(e.target.files[0]));
+
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.borderColor = 'var(--cyan)'; });
+dropzone.addEventListener('dragleave', () => { dropzone.style.borderColor = ''; });
+dropzone.addEventListener('drop', e => {
+  e.preventDefault(); dropzone.style.borderColor = '';
+  loadFile(e.dataTransfer.files[0]);
+});
+
+function loadFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const dataUrl = ev.target.result;
+    imageBase64 = dataUrl.split(',')[1];
+    imageType   = file.type || 'image/jpeg';
+    dropzone.innerHTML = `<img src="${dataUrl}" alt="Receipt">`;
+    dropzone.classList.add('has-image');
+    changeBtn.classList.remove('hidden');
+    scanBtn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+  showErr('scanErr', '');
+}
+
+function clearImage() {
+  imageBase64 = null; imageType = null;
+  dropzone.innerHTML = `
+    <div class="icon">⬡</div>
+    <div class="hint">ARRASTRA O <span>SELECCIONA</span> LA FOTO DEL TICKET</div>
+    <div style="font-size:10px;color:var(--dim);margin-top:6px;letter-spacing:0.1em">JPG · PNG · HEIC</div>`;
+  dropzone.classList.remove('has-image');
+  changeBtn.classList.add('hidden');
+  scanBtn.disabled = true;
+  fileInput.value = '';
+}
+
+// ── API call ──────────────────────────────────────────────
+async function callClaude(userText, systemPrompt, imgBase64 = null, imgType = null) {
+  const userContent = imgBase64
+    ? [
+        { type: 'image', source: { type: 'base64', media_type: imgType || 'image/jpeg', data: imgBase64 } },
+        { type: 'text', text: userText }
+      ]
+    : userText;
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 2000,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userContent }]
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || `API error ${res.status}`);
+  if (data.error) throw new Error(data.error.message);
+  const text = data.content?.[0]?.text;
+  if (!text) throw new Error('Empty response');
+  return text;
+}
+
+// ── scan receipt ──────────────────────────────────────────
+async function scanReceipt() {
+  if (!imageBase64) { showErr('scanErr', 'SUBE UNA IMAGEN DEL RECIBO'); return; }
+  scanBtn.disabled = true;
+  scanBtn.innerHTML = '<span class="blink">▋</span> ESCANEANDO…';
+  showErr('scanErr', '');
+  try {
+    const raw = await callClaude(
+      `Extract all line items from this receipt. Return ONLY valid JSON, no markdown:\n{"items":[{"name":"item name","qty":1,"unit_price":0.00,"total":0.00}],"subtotal":0.00,"tax":0.00,"tip":0.00}\nIf tax or tip not present use 0.`,
+      'You are a receipt parser. Extract structured data from receipt images. Return only valid JSON.',
+      imageBase64, imageType
+    );
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    receiptItems = parsed.items || [];
+    receiptMeta  = { subtotal: parsed.subtotal || 0, tax: parsed.tax || 0, tip: parsed.tip || 0 };
+    showLoadedState();
+  } catch (err) {
+    showErr('scanErr', `ERROR: ${err.message}`);
+    scanBtn.disabled = false;
+    scanBtn.textContent = 'ESCANEAR →';
+  }
+}
+
+function showLoadedState() {
+  document.getElementById('uploadState').classList.add('hidden');
+  document.getElementById('loadedState').classList.remove('hidden');
+
+  // item tags
+  const tagsEl = document.getElementById('itemTags');
+  tagsEl.innerHTML = receiptItems.map(it =>
+    `<div class="item-tag">${it.name} <span class="qty">×${it.qty}</span></div>`
+  ).join('');
+
+  // totals
+  const total = receiptMeta.subtotal + receiptMeta.tax + receiptMeta.tip;
+  document.getElementById('receiptTotals').innerHTML =
+    `<span>SUBTOTAL <span class="total-val">$${receiptMeta.subtotal.toFixed(2)}</span></span>
+     <span>IMP. <span class="total-val">$${receiptMeta.tax.toFixed(2)}</span></span>
+     <span>PROP. <span class="total-val">$${receiptMeta.tip.toFixed(2)}</span></span>
+     <span class="grand">TOTAL $${total.toFixed(2)}</span>`;
+
+  document.getElementById('inputPanel').classList.remove('hidden');
+  document.getElementById('inputForm').classList.remove('hidden');
+  document.getElementById('resultDisplay').classList.add('hidden');
+}
+
+// ── calculate ─────────────────────────────────────────────
+async function calculate() {
+  const name  = document.getElementById('nameInput').value.trim();
+  const order = document.getElementById('orderInput').value.trim();
+  if (!name)  { showErr('calcErr', 'ESCRIBE TU NOMBRE'); return; }
+  if (!order) { showErr('calcErr', 'ESCRIBE LO QUE PEDISTE'); return; }
+  showErr('calcErr', '');
+
+  const calcBtn = document.getElementById('calcBtn');
+  calcBtn.disabled = true;
+  calcBtn.innerHTML = '<span class="blink">▋</span> CALCULANDO…';
+
+  const itemsContext = receiptItems.map((it, i) =>
+    `${i}: ${it.name} x${it.qty} @ $${it.unit_price} = $${it.total}`
+  ).join('\n');
+
+  try {
+    const raw = await callClaude(
+      `Receipt items:\n${itemsContext}\n\nThis person says they had: "${order}"\n\nMatch their description to receipt items (be fuzzy and lenient). Return ONLY valid JSON:\n{"matched":[{"item_index":0,"qty":1,"subtotal":0.00}],"unmatched_note":""}\nCalculate subtotal as qty * unit_price.`,
+      'You are a receipt matching assistant. Match natural language food/drink descriptions to receipt line items. Return only valid JSON.'
+    );
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    const itemsTotal = (parsed.matched || []).reduce((s, m) => s + (m.subtotal || 0), 0);
+    const accent = ACCENTS[results.length % ACCENTS.length];
+
+    const result = { name, order, matched: parsed.matched || [], unmatched_note: parsed.unmatched_note || '', itemsTotal, accent };
+    results.push(result);
+
+    showResult(result);
+    updateSummary();
+  } catch (err) {
+    showErr('calcErr', `ERROR: ${err.message}`);
+    calcBtn.disabled = false;
+    calcBtn.textContent = '¿CUÁNTO DEBO? →';
+  }
+}
+
+function totalWithTaxTip(result) {
+  const allItems = results.reduce((s, r) => s + r.itemsTotal, 0);
+  const share    = allItems > 0 ? result.itemsTotal / allItems : 0;
+  return result.itemsTotal + (receiptMeta.tax + receiptMeta.tip) * share;
+}
+
+function showResult(result) {
+  const grand = totalWithTaxTip(result);
+  const extra = grand - result.itemsTotal;
+
+  document.getElementById('inputForm').classList.add('hidden');
+  const display = document.getElementById('resultDisplay');
+  display.classList.remove('hidden');
+
+  document.getElementById('resultTag').style.color = result.accent;
+  document.getElementById('resultName').style.color = result.accent;
+  document.getElementById('resultAmount').style.color = result.accent;
+  document.getElementById('resultName').textContent   = result.name.toUpperCase();
+  document.getElementById('resultOrder').textContent  = `"${result.order}"`;
+  document.getElementById('resultAmount').textContent = `$${grand.toFixed(2)}`;
+
+  let linesHTML = result.matched.map(m => {
+    const item = receiptItems[m.item_index];
+    if (!item) return '';
+    const label = item.name + (m.qty > 1 ? ` ×${m.qty}` : '');
+    return `<div class="result-line"><span>▸ ${label}</span><span>$${(m.subtotal||0).toFixed(2)}</span></div>`;
+  }).join('');
+
+  if (extra > 0) {
+    linesHTML += `<div class="result-line extra"><span>▸ impuesto + propina (proporcional)</span><span>$${extra.toFixed(2)}</span></div>`;
+  }
+  if (result.unmatched_note) {
+    linesHTML += `<div style="font-size:11px;color:var(--pink);margin-top:8px;padding:6px 10px;border:1px solid rgba(255,45,120,0.3);border-radius:2px">⚠ ${result.unmatched_note}</div>`;
+  }
+  document.getElementById('resultLines').innerHTML = linesHTML;
+}
+
+function nextPerson() {
+  // update all tax/tip shares now that results list may have changed
+  updateSummary();
+
+  document.getElementById('resultDisplay').classList.add('hidden');
+  document.getElementById('inputForm').classList.remove('hidden');
+  document.getElementById('nameInput').value  = '';
+  document.getElementById('orderInput').value = '';
+
+  const count = results.length + 1;
+  document.getElementById('personTag').textContent =
+    count === 1 ? 'PRIMERA PERSONA' : `PERSONA ${count}`;
+
+  const calcBtn = document.getElementById('calcBtn');
+  calcBtn.disabled = false;
+  calcBtn.textContent = '¿CUÁNTO DEBO? →';
+
+  document.getElementById('nameInput').focus();
+}
+
+function updateSummary() {
+  if (results.length < 2) return;
+  const panel = document.getElementById('summaryPanel');
+  panel.classList.remove('hidden');
+
+  const rowsEl = document.getElementById('summaryRows');
+  rowsEl.innerHTML = results.map(r => {
+    const grand = totalWithTaxTip(r);
+    return `<div class="summary-row">
+      <div>
+        <span class="summary-name" style="color:${r.accent}">${r.name}</span>
+        <span class="summary-order">${r.order}</span>
+      </div>
+      <span class="summary-amt" style="color:${r.accent}">$${grand.toFixed(2)}</span>
+    </div>`;
+  }).join('');
+
+  const grandTotal = results.reduce((s, r) => s + totalWithTaxTip(r), 0);
+  document.getElementById('summaryTotal').textContent = `$${grandTotal.toFixed(2)}`;
+}
+
+function resetAll() {
+  receiptItems = []; receiptMeta = { subtotal: 0, tax: 0, tip: 0 };
+  results = []; imageBase64 = null; imageType = null;
+
+  clearImage();
+  document.getElementById('uploadState').classList.remove('hidden');
+  document.getElementById('loadedState').classList.add('hidden');
+  document.getElementById('inputPanel').classList.add('hidden');
+  document.getElementById('summaryPanel').classList.add('hidden');
+  document.getElementById('inputForm').classList.remove('hidden');
+  document.getElementById('resultDisplay').classList.add('hidden');
+  document.getElementById('nameInput').value  = '';
+  document.getElementById('orderInput').value = '';
+  document.getElementById('personTag').textContent = 'PRIMERA PERSONA';
+
+  const calcBtn = document.getElementById('calcBtn');
+  calcBtn.disabled = false;
+  calcBtn.textContent = '¿CUÁNTO DEBO? →';
+
+  showErr('scanErr', ''); showErr('calcErr', '');
+}
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (msg) { el.textContent = '⚠ ' + msg; el.classList.add('show'); }
+  else { el.textContent = ''; el.classList.remove('show'); }
+}
+</script>
+</body>
+</html>

@@ -9,3 +9,9 @@ routes = [
 [[r2_buckets]]
 binding = "SITE_BUCKET"
 bucket_name = "shipartifact-sites"
+
+[[unsafe.bindings]]
+name = "AI_RATE_LIMITER"
+type = "ratelimit"
+namespace_id = "0"
+simple = { limit = 10, period = 60 }

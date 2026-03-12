@@ -1,5 +1,15 @@
+interface RateLimiterResult {
+  success: boolean;
+}
+
+interface RateLimiterBinding {
+  limit(options: { key: string }): Promise<RateLimiterResult>;
+}
+
 export interface Env {
   SITE_BUCKET: R2Bucket;
+  ANTHROPIC_API_KEY: string;
+  AI_RATE_LIMITER: RateLimiterBinding;
 }
 
 const DOMAIN = "shipartifact.com";
@@ -13,6 +23,93 @@ const RESERVED_SUBDOMAINS = [
   "ftp",
   "cdn",
 ];
+
+const MAX_TOKENS_CAP = 4096;
+const ANTHROPIC_API_BASE = "https://api.anthropic.com";
+
+async function handleAiProxy(
+  request: Request,
+  url: URL,
+  slug: string,
+  env: Env
+): Promise<Response> {
+  // Only allow POST
+  if (request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, x-api-key, anthropic-version",
+        "Access-Control-Max-Age": "86400",
+      },
+    });
+  }
+
+  if (request.method !== "POST") {
+    return new Response("Method Not Allowed", { status: 405 });
+  }
+
+  // Rate limit by slug
+  const { success } = await env.AI_RATE_LIMITER.limit({ key: slug });
+  if (!success) {
+    return new Response(
+      JSON.stringify({ error: "Rate limit exceeded. Try again in a minute." }),
+      { status: 429, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  if (!env.ANTHROPIC_API_KEY) {
+    return new Response(
+      JSON.stringify({ error: "AI proxy not configured" }),
+      { status: 503, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // Parse and cap max_tokens
+  let body: string;
+  try {
+    const json = await request.json() as Record<string, unknown>;
+    if (typeof json.max_tokens === "number" && json.max_tokens > MAX_TOKENS_CAP) {
+      json.max_tokens = MAX_TOKENS_CAP;
+    }
+    body = JSON.stringify(json);
+  } catch {
+    return new Response(
+      JSON.stringify({ error: "Invalid JSON body" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  // Forward to Anthropic
+  const upstreamPath = url.pathname.replace(/^\/api\/ai/, "");
+  const upstreamUrl = `${ANTHROPIC_API_BASE}${upstreamPath}`;
+
+  const headers = new Headers();
+  headers.set("Content-Type", "application/json");
+  headers.set("x-api-key", env.ANTHROPIC_API_KEY);
+  // Forward anthropic-version if present
+  const version = request.headers.get("anthropic-version");
+  if (version) {
+    headers.set("anthropic-version", version);
+  }
+
+  const upstreamRes = await fetch(upstreamUrl, {
+    method: "POST",
+    headers,
+    body,
+  });
+
+  // Stream the response back
+  const responseHeaders = new Headers();
+  responseHeaders.set("Content-Type", upstreamRes.headers.get("Content-Type") || "application/json");
+  responseHeaders.set("Access-Control-Allow-Origin", "*");
+
+  return new Response(upstreamRes.body, {
+    status: upstreamRes.status,
+    headers: responseHeaders,
+  });
+}
 
 function notFoundPage(slug: string): string {
   return `<!DOCTYPE html>
@@ -75,6 +172,11 @@ export default {
 
     if (RESERVED_SUBDOMAINS.includes(slug)) {
       return new Response("Not Found", { status: 404 });
+    }
+
+    // AI proxy — intercept /api/ai/* requests
+    if (url.pathname.startsWith("/api/ai/")) {
+      return handleAiProxy(request, url, slug, env);
     }
 
     // Fetch from R2

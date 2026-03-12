@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { detectArtifactType } from "@/lib/artifact/detect";
+import { detectArtifactType, detectsAiUsage } from "@/lib/artifact/detect";
 import { wrapArtifact } from "@/lib/artifact/wrap";
 import { MAX_CODE_LENGTH } from "@/lib/constants";
 
@@ -22,10 +22,11 @@ export async function POST(req: NextRequest) {
   }
 
   const artifactType = detectArtifactType(sourceCode);
+  const usesAi = detectsAiUsage(sourceCode);
   const html = wrapArtifact(sourceCode, artifactType, {
     title: title || "Preview",
     slug: "preview",
-  });
+  }, { usesAi });
 
   return NextResponse.json({ html, artifactType });
 }

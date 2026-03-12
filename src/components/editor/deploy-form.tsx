@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { SITES_DOMAIN } from "@/lib/constants";
-import { Loader2, Check, X } from "lucide-react";
+import { Loader2, Check, X, Sparkles } from "lucide-react";
 
 interface DeployFormProps {
   slug: string;
@@ -15,6 +15,7 @@ interface DeployFormProps {
   isDeploying: boolean;
   isRedeploy?: boolean;
   errors: Record<string, string>;
+  usesAi?: boolean;
 }
 
 function titleToSlug(title: string): string {
@@ -37,6 +38,7 @@ export function DeployForm({
   isDeploying,
   isRedeploy = false,
   errors,
+  usesAi = false,
 }: DeployFormProps) {
   const [slugStatus, setSlugStatus] = useState<
     "idle" | "checking" | "available" | "owned" | "taken"
@@ -185,6 +187,14 @@ export function DeployForm({
           className="w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/30"
         />
       </div>
+
+      {/* AI indicator */}
+      {usesAi && (
+        <div className="flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-primary">
+          <Sparkles size={14} />
+          <span>This artifact uses AI — API calls will be proxied through ShipArtifact</span>
+        </div>
+      )}
 
       {/* Launch button */}
       <button

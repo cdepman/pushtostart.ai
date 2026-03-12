@@ -48,6 +48,14 @@ export function extractTitle(code: string): string | null {
   return null;
 }
 
+export function detectsAiUsage(code: string): boolean {
+  const patterns = [
+    /api\.anthropic\.com/i,
+    /anthropic-dangerous-direct-browser-access/i,
+  ];
+  return patterns.some((p) => p.test(code));
+}
+
 export function detectArtifactType(code: string): ArtifactType {
   const trimmed = code.trim();
 

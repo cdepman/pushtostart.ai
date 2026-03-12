@@ -31,6 +31,7 @@ export async function createSite(data: {
   description?: string;
   sourceCode: string;
   artifactType: string;
+  usesAi?: boolean;
 }) {
   const results = await db.insert(sites).values(data).returning();
   return results[0];
@@ -45,6 +46,7 @@ export async function updateSite(
     artifactType: string;
     currentVersion: number;
     isPublished: boolean;
+    usesAi: boolean;
   }>
 ) {
   const results = await db

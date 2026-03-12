@@ -1,6 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { detectArtifactType } from "@/lib/artifact/detect";
+import { detectArtifactType, detectsAiUsage } from "@/lib/artifact/detect";
 import { wrapArtifact } from "@/lib/artifact/wrap";
 import { validateDeployInput } from "@/lib/artifact/validate";
 import {
@@ -62,13 +62,14 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Detect artifact type and wrap
+  // Detect artifact type and AI usage, then wrap
   const artifactType = detectArtifactType(sourceCode);
+  const usesAi = detectsAiUsage(sourceCode);
   const wrappedHtml = wrapArtifact(sourceCode, artifactType, {
     title,
     description,
     slug,
-  });
+  }, { usesAi });
 
   try {
     // DB first, then R2 — if DB fails, nothing is orphaned in R2
@@ -83,6 +84,7 @@ export async function POST(req: NextRequest) {
         sourceCode,
         artifactType,
         currentVersion: version,
+        usesAi,
       });
     } else {
       version = 1;
@@ -93,6 +95,7 @@ export async function POST(req: NextRequest) {
         description,
         sourceCode,
         artifactType,
+        usesAi,
       });
     }
 

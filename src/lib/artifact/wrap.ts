@@ -72,6 +72,30 @@ function prepareJsxCode(code: string): string {
   return processed;
 }
 
+const AI_PROXY_SCRIPT = `<script>
+(function() {
+  var _origFetch = window.fetch;
+  window.fetch = function(url, opts) {
+    if (typeof url === 'string' && url.indexOf('api.anthropic.com') !== -1) {
+      var proxyUrl = '/api/ai' + new URL(url).pathname;
+      var newHeaders = {};
+      if (opts && opts.headers) {
+        var h = opts.headers;
+        if (typeof h.forEach === 'function') {
+          h.forEach(function(v, k) { newHeaders[k] = v; });
+        } else {
+          for (var k in h) { newHeaders[k] = h[k]; }
+        }
+      }
+      delete newHeaders['anthropic-dangerous-direct-browser-access'];
+      var newOpts = Object.assign({}, opts, { headers: newHeaders });
+      return _origFetch.call(window, proxyUrl, newOpts);
+    }
+    return _origFetch.apply(window, arguments);
+  };
+})();
+</script>`;
+
 const BADGE_HTML = `
   <div style="position:fixed;bottom:8px;right:8px;opacity:0.5;font-size:11px;font-family:sans-serif;z-index:99999;">
     <a href="https://shipartifact.com" target="_blank" rel="noopener" style="color:#888;text-decoration:none;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
@@ -81,7 +105,8 @@ const BADGE_HTML = `
 
 export function wrapJsxArtifact(
   code: string,
-  meta: { title: string; description?: string; slug: string }
+  meta: { title: string; description?: string; slug: string },
+  options?: { usesAi?: boolean }
 ): string {
   const componentName = extractComponentName(code);
   const processedCode = prepareJsxCode(code);
@@ -101,6 +126,7 @@ export function wrapJsxArtifact(
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
+  ${options?.usesAi ? AI_PROXY_SCRIPT : ""}
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -126,10 +152,12 @@ export function wrapJsxArtifact(
 
 export function wrapHtmlArtifact(
   code: string,
-  meta: { title: string; description?: string; slug: string }
+  meta: { title: string; description?: string; slug: string },
+  options?: { usesAi?: boolean }
 ): string {
   const desc = meta.description || meta.title;
   const trimmed = code.trim();
+  const aiScript = options?.usesAi ? AI_PROXY_SCRIPT : "";
 
   // If it's a complete HTML document, inject meta tags
   if (trimmed.match(/^<!DOCTYPE/i) || trimmed.match(/^<html/i)) {
@@ -140,6 +168,14 @@ export function wrapHtmlArtifact(
       html = html.replace(
         /<head([^>]*)>/i,
         `<head$1>\n  <title>${escapeHtml(meta.title)}</title>`
+      );
+    }
+
+    // Inject AI proxy script as first child of <head>
+    if (aiScript) {
+      html = html.replace(
+        /<head([^>]*)>/i,
+        `<head$1>\n  ${aiScript}`
       );
     }
 
@@ -167,6 +203,7 @@ export function wrapHtmlArtifact(
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
+  ${aiScript}
 </head>
 <body>
   ${code}
@@ -178,10 +215,11 @@ export function wrapHtmlArtifact(
 export function wrapArtifact(
   code: string,
   type: ArtifactType,
-  meta: { title: string; description?: string; slug: string }
+  meta: { title: string; description?: string; slug: string },
+  options?: { usesAi?: boolean }
 ): string {
   if (type === "jsx") {
-    return wrapJsxArtifact(code, meta);
+    return wrapJsxArtifact(code, meta, options);
   }
-  return wrapHtmlArtifact(code, meta);
+  return wrapHtmlArtifact(code, meta, options);
 }

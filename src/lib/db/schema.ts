@@ -16,6 +16,7 @@ export const sites = pgTable("sites", {
   sourceCode: text("source_code").notNull(),
   artifactType: text("artifact_type").notNull(), // 'jsx' | 'html'
   currentVersion: integer("current_version").notNull().default(1),
+  usesAi: boolean("uses_ai").notNull().default(false),
   isPublished: boolean("is_published").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

@@ -9,7 +9,7 @@ import { SharePreview } from "@/components/editor/share-preview";
 import { Navbar } from "@/components/shared/navbar";
 import { ExternalLink, PartyPopper } from "lucide-react";
 import { SITES_DOMAIN } from "@/lib/constants";
-import { extractTitle } from "@/lib/artifact/detect";
+import { extractTitle, detectsAiUsage } from "@/lib/artifact/detect";
 
 export default function NewSitePage() {
   return (
@@ -35,12 +35,14 @@ function NewSitePageInner() {
     url: string;
     slug: string;
   } | null>(null);
+  const [usesAi, setUsesAi] = useState(false);
   const titleManuallyEdited = useRef(false);
 
   // Auto-extract title from pasted code and generate slug
   const handleCodeChange = useCallback(
     (newCode: string) => {
       setCode(newCode);
+      setUsesAi(detectsAiUsage(newCode));
 
       if (!titleManuallyEdited.current && !isRedeploy) {
         const extracted = extractTitle(newCode);
@@ -207,6 +209,7 @@ function NewSitePageInner() {
             isDeploying={isDeploying}
             isRedeploy={isRedeploy}
             errors={errors}
+            usesAi={usesAi}
           />
           <div className="hidden lg:block">
             <SharePreview

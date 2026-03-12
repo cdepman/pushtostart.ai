@@ -1,0 +1,1 @@
+ALTER TABLE "sites" ADD COLUMN "uses_ai" boolean DEFAULT false NOT NULL;

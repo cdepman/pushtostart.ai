@@ -33,7 +33,17 @@ body {
 }
 
 /* Clerk theme overrides */
-.cl-card {
-  background: var(--muted) !important;
-  border: 1px solid var(--border) !important;
+.cl-card,
+.cl-footer {
+  background: #13151d !important;
+  color: #e2e4e9 !important;
+}
+
+.cl-footerAction__signUp,
+.cl-footerAction__signIn {
+  background: #13151d !important;
+}
+
+.cl-internal-b3fm6y {
+  color: #9ca3af !important;
 }

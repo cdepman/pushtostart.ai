@@ -74,6 +74,26 @@ function prepareJsxCode(code: string): string {
 
 const AI_PROXY_SCRIPT = `<script>
 (function() {
+  function __ptsDetectFmt(d) {
+    if (!d || typeof d !== 'string') return null;
+    if (d.startsWith('/9j/')) return 'image/jpeg';
+    if (d.startsWith('iVBOR')) return 'image/png';
+    if (d.startsWith('R0lGOD')) return 'image/gif';
+    if (d.startsWith('UklGR')) return 'image/webp';
+    return null;
+  }
+  function __ptsFixImages(obj) {
+    if (!obj || typeof obj !== 'object') return;
+    if (Array.isArray(obj)) { obj.forEach(__ptsFixImages); return; }
+    if (obj.type === 'base64' && obj.data && (obj.media_type || obj.mediaType)) {
+      var detected = __ptsDetectFmt(obj.data);
+      if (detected) {
+        if (obj.media_type) obj.media_type = detected;
+        if (obj.mediaType) obj.mediaType = detected;
+      }
+    }
+    Object.keys(obj).forEach(function(k) { __ptsFixImages(obj[k]); });
+  }
   var _origFetch = window.fetch;
   window.fetch = function(url, opts) {
     if (typeof url === 'string' && url.indexOf('api.anthropic.com') !== -1) {
@@ -88,7 +108,11 @@ const AI_PROXY_SCRIPT = `<script>
         }
       }
       delete newHeaders['anthropic-dangerous-direct-browser-access'];
-      var newOpts = Object.assign({}, opts, { headers: newHeaders });
+      var newBody = opts && opts.body;
+      if (typeof newBody === 'string') {
+        try { var p = JSON.parse(newBody); __ptsFixImages(p); newBody = JSON.stringify(p); } catch(e) {}
+      }
+      var newOpts = Object.assign({}, opts, { headers: newHeaders, body: newBody });
       return _origFetch.call(window, proxyUrl, newOpts);
     }
     return _origFetch.apply(window, arguments);

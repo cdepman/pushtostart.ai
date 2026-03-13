@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "https://pushtostart.ai/api/og",
+        url: "https://pushtostart.ai/og.png",
         width: 1200,
         height: 630,
         alt: "PushToStart — Create in Claude. Share with the world.",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PushToStart",
     description: "Turn your Claude creations into live websites in seconds.",
-    images: ["https://pushtostart.ai/api/og"],
+    images: ["https://pushtostart.ai/og.png"],
   },
 };
 

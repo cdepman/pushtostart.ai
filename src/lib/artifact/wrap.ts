@@ -124,7 +124,7 @@ export function wrapJsxArtifact(
   <meta property="og:title" content="${escapeHtml(meta.title)}" />
   <meta property="og:description" content="${escapeHtml(desc)}" />
   <meta property="og:url" content="https://${meta.slug}.${SITES_DOMAIN}" />
-  <meta property="og:image" content="${APP_URL}/api/og" />
+  <meta property="og:image" content="${APP_URL}/og.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -180,7 +180,7 @@ export function wrapHtmlArtifact(
   <meta property="og:title" content="${escapeHtml(meta.title)}" />
   <meta property="og:description" content="${escapeHtml(desc)}" />
   <meta property="og:url" content="https://${meta.slug}.${SITES_DOMAIN}" />
-  <meta property="og:image" content="${APP_URL}/api/og" />
+  <meta property="og:image" content="${APP_URL}/og.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />`;
@@ -226,7 +226,7 @@ export function wrapHtmlArtifact(
   <meta property="og:title" content="${escapeHtml(meta.title)}" />
   <meta property="og:description" content="${escapeHtml(desc)}" />
   <meta property="og:url" content="https://${meta.slug}.${SITES_DOMAIN}" />
-  <meta property="og:image" content="${APP_URL}/api/og" />
+  <meta property="og:image" content="${APP_URL}/og.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />

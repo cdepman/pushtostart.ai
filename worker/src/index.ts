@@ -88,11 +88,9 @@ async function handleAiProxy(
   const headers = new Headers();
   headers.set("Content-Type", "application/json");
   headers.set("x-api-key", env.ANTHROPIC_API_KEY);
-  // Forward anthropic-version if present
-  const version = request.headers.get("anthropic-version");
-  if (version) {
-    headers.set("anthropic-version", version);
-  }
+  // Forward anthropic-version, default to latest if not provided
+  const version = request.headers.get("anthropic-version") || "2023-06-01";
+  headers.set("anthropic-version", version);
 
   const upstreamRes = await fetch(upstreamUrl, {
     method: "POST",

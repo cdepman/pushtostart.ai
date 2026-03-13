@@ -131,6 +131,31 @@ const AI_PROXY_SCRIPT = `<script>
       }, Promise.resolve());
     });
   }
+  function __ptsToast(msg, isError) {
+    var t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);max-width:90vw;' +
+      'padding:12px 24px;border-radius:10px;z-index:99999;font-size:14px;font-family:system-ui,sans-serif;' +
+      'box-shadow:0 4px 12px rgba(0,0,0,0.15);transition:opacity 0.3s;' +
+      (isError ? 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;' : 'background:#fef3c7;color:#92400e;border:1px solid #fcd34d;');
+    document.body.appendChild(t);
+    setTimeout(function() { t.style.opacity = '0'; setTimeout(function() { t.remove(); }, 300); }, 5000);
+  }
+  function __ptsHandleAiResponse(res) {
+    if (res.ok) return res;
+    var status = res.status;
+    if (status === 429) {
+      __ptsToast('Slow down — please wait a moment before trying again.', false);
+    } else {
+      res.clone().json().then(function(body) {
+        var msg = (body && body.error && body.error.message) || 'Something went wrong (HTTP ' + status + ')';
+        __ptsToast(msg, true);
+      }).catch(function() {
+        __ptsToast('AI request failed (HTTP ' + status + ')', true);
+      });
+    }
+    return res;
+  }
   var _origFetch = window.fetch;
   window.fetch = function(url, opts) {
     if (typeof url === 'string' && url.indexOf('api.anthropic.com') !== -1) {
@@ -154,12 +179,12 @@ const AI_PROXY_SCRIPT = `<script>
               return _origFetch.call(window, proxyUrl, Object.assign({}, opts, {
                 headers: newHeaders, body: JSON.stringify(p)
               }));
-            });
+            }).then(__ptsHandleAiResponse);
           }
         } catch(e) {}
       }
       var newOpts = Object.assign({}, opts, { headers: newHeaders, body: newBody });
-      return _origFetch.call(window, proxyUrl, newOpts);
+      return _origFetch.call(window, proxyUrl, newOpts).then(__ptsHandleAiResponse);
     }
     return _origFetch.apply(window, arguments);
   };

@@ -68,78 +68,20 @@ const fixImageFormat: Check = (code) => {
   };
 };
 
-// ── Check 3: Add AI error handling ─────────────────────────────────
+// ── Check 3: AI error handling (handled by AI proxy in wrap.ts) ───
 
-const addAiErrorHandling: Check = (code, usesAi) => {
-  if (!usesAi) return { code };
-
-  // Check if there's already reasonable error handling
-  const hasCatch = /\.catch\s*\(/.test(code) || /catch\s*\(/.test(code);
-  if (hasCatch) return { code };
-
-  // Inject a global unhandled rejection handler for friendly error messages
-  const handler = `
-// [PushToStart] Friendly error handler for AI calls
-window.addEventListener('unhandledrejection', function(e) {
-  if (e.reason && typeof e.reason.message === 'string') {
-    var msg = e.reason.message;
-    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-      alert('Having trouble connecting to AI. Please check your internet and try again.');
-    } else if (msg.includes('400')) {
-      alert('The AI request had an issue. Try again with a different input.');
-    } else if (msg.includes('500') || msg.includes('503')) {
-      alert('The AI service is temporarily unavailable. Please try again in a moment.');
-    }
-  }
-});
-`;
-
-  return {
-    code: handler + code,
-    fix: {
-      id: "ai-error-handling",
-      label: "Added friendly error messages",
-      severity: "fix",
-    },
-  };
+const addAiErrorHandling: Check = (code) => {
+  // Error toasts are now handled by the AI proxy script in wrap.ts.
+  // This check is a no-op.
+  return { code };
 };
 
-// ── Check 4: Add rate limit handling ───────────────────────────────
+// ── Check 4: Rate limit handling (handled by AI proxy in wrap.ts) ──
 
 const addRateLimitHandling: Check = (code, usesAi) => {
-  if (!usesAi) return { code };
-
-  // Check if 429 is already handled
-  if (/429/.test(code) || /rate.?limit/i.test(code)) return { code };
-
-  // Inject a fetch wrapper that handles 429s gracefully
-  const handler = `
-// [PushToStart] Rate limit handler
-(function() {
-  var _ptsFetch = window.fetch;
-  window.fetch = function() {
-    return _ptsFetch.apply(window, arguments).then(function(res) {
-      if (res.status === 429) {
-        var toast = document.createElement('div');
-        toast.textContent = 'Slow down! Please wait a moment before trying again.';
-        toast.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#ef4444;color:#fff;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;';
-        document.body.appendChild(toast);
-        setTimeout(function() { toast.remove(); }, 4000);
-      }
-      return res;
-    });
-  };
-})();
-`;
-
-  return {
-    code: handler + code,
-    fix: {
-      id: "rate-limit-handling",
-      label: "Added rate limit handling",
-      severity: "fix",
-    },
-  };
+  // Rate limit toasts and error display are now handled by the AI proxy
+  // script in wrap.ts. This check is a no-op.
+  return { code };
 };
 
 // ── Check 5: Remove process.env references ─────────────────────────

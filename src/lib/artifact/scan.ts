@@ -119,7 +119,7 @@ function __ptsDetectImageFormat(b64) {
         opts = Object.assign({}, opts, { body: JSON.stringify(parsed) });
       } catch(e) {}
     }
-    return _ptsFetch.apply(window, arguments);
+    return _ptsFetch.call(window, url, opts);
   };
 })();
 `;

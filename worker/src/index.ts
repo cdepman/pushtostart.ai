@@ -27,6 +27,45 @@ const RESERVED_SUBDOMAINS = [
 const MAX_TOKENS_CAP = 4096;
 const ANTHROPIC_API_BASE = "https://api.anthropic.com";
 
+const VALID_IMAGE_TYPES = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+]);
+
+/** Detect image format from base64 magic bytes */
+function detectImageFormat(b64: string): string {
+  const d = b64.replace(/^data:.*?,/, "");
+  if (d.startsWith("/9j/")) return "image/jpeg";
+  if (d.startsWith("iVBOR")) return "image/png";
+  if (d.startsWith("R0lGOD")) return "image/gif";
+  if (d.startsWith("UklGR")) return "image/webp";
+  return "image/png"; // safe fallback
+}
+
+/** Walk the messages body and fix any invalid image media_types */
+function fixImageMediaTypes(obj: unknown): void {
+  if (!obj || typeof obj !== "object") return;
+  if (Array.isArray(obj)) {
+    obj.forEach(fixImageMediaTypes);
+    return;
+  }
+  const rec = obj as Record<string, unknown>;
+  // Match the Anthropic image source shape: { type: "base64", media_type: "...", data: "..." }
+  if (
+    rec.type === "base64" &&
+    typeof rec.data === "string" &&
+    typeof rec.media_type === "string" &&
+    !VALID_IMAGE_TYPES.has(rec.media_type)
+  ) {
+    rec.media_type = detectImageFormat(rec.data);
+  }
+  for (const val of Object.values(rec)) {
+    fixImageMediaTypes(val);
+  }
+}
+
 async function handleAiProxy(
   request: Request,
   url: URL,
@@ -72,6 +111,10 @@ async function handleAiProxy(
     const json = await request.json() as Record<string, unknown>;
     if (typeof json.max_tokens === "number" && json.max_tokens > MAX_TOKENS_CAP) {
       json.max_tokens = MAX_TOKENS_CAP;
+    }
+    // Fix invalid image media_types before forwarding
+    if (json.messages) {
+      fixImageMediaTypes(json.messages);
     }
     body = JSON.stringify(json);
   } catch {

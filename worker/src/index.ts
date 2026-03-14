@@ -220,6 +220,22 @@ export default {
       return handleAiProxy(request, url, slug, env);
     }
 
+    // Serve OG image if requested
+    if (url.pathname === "/og.png") {
+      const ogKey = `sites/${slug}/og.png`;
+      const ogObject = await env.SITE_BUCKET.get(ogKey);
+      if (ogObject) {
+        return new Response(ogObject.body, {
+          headers: {
+            "Content-Type": "image/png",
+            "Cache-Control": "public, max-age=3600, s-maxage=3600",
+          },
+        });
+      }
+      // Fall through to 404 if no OG image exists
+      return new Response("Not Found", { status: 404 });
+    }
+
     // Fetch from R2
     const key = `sites/${slug}/index.html`;
     const object = await env.SITE_BUCKET.get(key);

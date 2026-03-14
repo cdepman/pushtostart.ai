@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import html2canvas from "html2canvas";
 import { CodeEditor } from "@/components/editor/code-editor";
 import { PreviewPane } from "@/components/editor/preview-pane";
 import { DeployForm } from "@/components/editor/deploy-form";
@@ -40,8 +41,11 @@ function NewSitePageInner() {
   const [usesAi, setUsesAi] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [isScanning, setIsScanning] = useState(false);
+  const [ogImage, setOgImage] = useState<string | null>(null);
   const titleManuallyEdited = useRef(false);
   const scanTimeout = useRef<ReturnType<typeof setTimeout>>(null);
+  const screenshotTimeout = useRef<ReturnType<typeof setTimeout>>(null);
+  const screenshotIframeRef = useRef<HTMLIFrameElement>(null);
 
   // Auto-extract title from pasted code and generate slug
   const handleCodeChange = useCallback(
@@ -83,6 +87,54 @@ function NewSitePageInner() {
     [isRedeploy]
   );
 
+  // Capture OG screenshot from a hidden iframe after code stabilizes
+  const captureScreenshot = useCallback((htmlCode: string) => {
+    if (screenshotTimeout.current) clearTimeout(screenshotTimeout.current);
+    if (!htmlCode || htmlCode.trim().length < 50) {
+      setOgImage(null);
+      return;
+    }
+
+    // Debounce — wait for code to stabilize before capturing
+    screenshotTimeout.current = setTimeout(() => {
+      const iframe = screenshotIframeRef.current;
+      if (!iframe) return;
+
+      iframe.srcdoc = htmlCode;
+      iframe.onload = () => {
+        // Give scripts time to execute (React, Tailwind, etc.)
+        setTimeout(async () => {
+          try {
+            const doc = iframe.contentDocument;
+            if (!doc?.body) return;
+
+            const canvas = await html2canvas(doc.body, {
+              width: 1200,
+              height: 630,
+              windowWidth: 1200,
+              windowHeight: 630,
+              scale: 1,
+              useCORS: true,
+              logging: false,
+            });
+
+            setOgImage(canvas.toDataURL("image/png"));
+          } catch {
+            // Screenshot failed — non-fatal, will use default OG
+          }
+        }, 1500);
+      };
+    }, 2000);
+  }, []);
+
+  // Trigger screenshot when preview code changes
+  useEffect(() => {
+    const previewCode = scanResult?.fixedCode || code;
+    if (previewCode) {
+      captureScreenshot(previewCode);
+    }
+  }, [scanResult?.fixedCode, code, captureScreenshot]);
+
   const handleTitleChange = useCallback((newTitle: string) => {
     setTitle(newTitle);
     titleManuallyEdited.current = true;
@@ -122,6 +174,7 @@ function NewSitePageInner() {
           title: title || slug,
           description,
           sourceCode: scanResult?.fixedCode || code,
+          ogImage: ogImage || undefined,
         }),
       });
 
@@ -187,6 +240,7 @@ function NewSitePageInner() {
                   setTitle("");
                   setDescription("");
                   setIsRedeploy(false);
+                  setOgImage(null);
                   titleManuallyEdited.current = false;
                 }}
                 className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
@@ -249,10 +303,18 @@ function NewSitePageInner() {
             <SharePreview
               slug={slug}
               title={title}
+              ogImage={ogImage}
             />
           </div>
         </div>
       </div>
+
+      {/* Hidden iframe for OG screenshot capture */}
+      <iframe
+        ref={screenshotIframeRef}
+        style={{ position: "absolute", left: "-9999px", top: 0, width: 1200, height: 630, border: "none" }}
+        title="Screenshot capture"
+      />
     </>
   );
 }

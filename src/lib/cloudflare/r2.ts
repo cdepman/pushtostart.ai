@@ -32,13 +32,38 @@ export async function uploadSiteToR2(
   );
 }
 
-export async function deleteSiteFromR2(slug: string): Promise<void> {
+export async function uploadOgImageToR2(
+  slug: string,
+  imageBuffer: Buffer
+): Promise<void> {
   const r2 = getR2Client();
 
   await r2.send(
-    new DeleteObjectCommand({
+    new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME!,
-      Key: `sites/${slug}/index.html`,
+      Key: `sites/${slug}/og.png`,
+      Body: imageBuffer,
+      ContentType: "image/png",
+      CacheControl: "public, max-age=3600",
     })
   );
+}
+
+export async function deleteSiteFromR2(slug: string): Promise<void> {
+  const r2 = getR2Client();
+
+  await Promise.all([
+    r2.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME!,
+        Key: `sites/${slug}/index.html`,
+      })
+    ),
+    r2.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME!,
+        Key: `sites/${slug}/og.png`,
+      })
+    ).catch(() => {}), // OG image may not exist
+  ]);
 }

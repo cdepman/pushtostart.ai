@@ -5,9 +5,10 @@ import { SITES_DOMAIN } from "@/lib/constants";
 interface SharePreviewProps {
   slug: string;
   title: string;
+  ogImage?: string | null;
 }
 
-export function SharePreview({ slug, title }: SharePreviewProps) {
+export function SharePreview({ slug, title, ogImage }: SharePreviewProps) {
   const displayTitle = title || slug || "My App";
   const displayUrl = slug
     ? `${slug}.${SITES_DOMAIN}`
@@ -88,10 +89,15 @@ export function SharePreview({ slug, title }: SharePreviewProps) {
                 <div className="relative h-[110px] overflow-hidden bg-[#06080d]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/api/og"
-                    alt="PushToStart OG preview"
+                    src={ogImage || "/api/og"}
+                    alt="Site preview"
                     className="h-full w-full object-cover"
                   />
+                  {!ogImage && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-[#06080d]/60">
+                      <span className="text-[9px] text-white/50">Generating preview...</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Card text area */}

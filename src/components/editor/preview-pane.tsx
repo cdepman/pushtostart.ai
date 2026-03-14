@@ -143,7 +143,7 @@ export function PreviewPane({ code, title = "Preview" }: PreviewPaneProps) {
             ref={iframeRef}
             key={refreshKey}
             srcDoc={previewHtml}
-            sandbox="allow-scripts allow-forms"
+            sandbox="allow-scripts allow-forms allow-top-navigation-by-user-activation"
             className="h-full w-full"
             title="Preview"
           />

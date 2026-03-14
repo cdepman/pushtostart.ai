@@ -84,7 +84,34 @@ const addRateLimitHandling: Check = (code, usesAi) => {
   return { code };
 };
 
-// ── Check 5: Remove process.env references ─────────────────────────
+// ── Check 5: Fix claudeusercontent.com URLs ─────────────────────────
+
+const fixClaudeLinks: Check = (code) => {
+  // Claude artifacts render inside claudeusercontent.com, so anchor links
+  // like href="#section" get resolved to the full sandbox URL:
+  //   https://www.claudeusercontent.com/?domain=claude.ai&...#section
+  // Strip the wrapper and keep just the meaningful part (hash or path).
+  const claudeUrlPattern =
+    /https?:\/\/(?:www\.)?claudeusercontent\.com\/?\?[^"'\s]*?#([^"'\s]*)/g;
+
+  if (!claudeUrlPattern.test(code)) return { code };
+
+  // Reset lastIndex after .test()
+  claudeUrlPattern.lastIndex = 0;
+
+  const fixed = code.replace(claudeUrlPattern, "#$1");
+
+  return {
+    code: fixed,
+    fix: {
+      id: "fix-claude-links",
+      label: "Fixed links from Claude preview",
+      severity: "fix",
+    },
+  };
+};
+
+// ── Check 6: Remove process.env references ────────────────────────
 
 const removeProcessEnv: Check = (code) => {
   if (!/process\.env/.test(code)) return { code };
@@ -101,7 +128,7 @@ const removeProcessEnv: Check = (code) => {
   };
 };
 
-// ── Check 6: Remove require() calls ────────────────────────────────
+// ── Check 7: Remove require() calls ────────────────────────────────
 
 const removeRequire: Check = (code) => {
   if (!/\brequire\s*\(/.test(code)) return { code };
@@ -129,6 +156,7 @@ const ALL_CHECKS: Check[] = [
   fixImageFormat,
   addAiErrorHandling,
   addRateLimitHandling,
+  fixClaudeLinks,
   removeProcessEnv,
   removeRequire,
 ];

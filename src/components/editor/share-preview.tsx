@@ -75,7 +75,7 @@ export function SharePreview({ slug, title, ogImage, hasCode }: SharePreviewProp
           </div>
 
           {/* Chat area */}
-          <div className="flex min-h-[340px] flex-col bg-white px-2.5 pb-3 pt-3">
+          <div className="flex h-[340px] flex-col bg-white px-2.5 pb-3 pt-3">
             {/* Sent message — "check this out" */}
             <div className="mb-1 ml-auto max-w-[180px]">
               <div className="rounded-2xl rounded-br-md bg-[#007AFF] px-3 py-1.5">
@@ -89,7 +89,7 @@ export function SharePreview({ slug, title, ogImage, hasCode }: SharePreviewProp
             <div className="mb-3 ml-auto max-w-[210px]">
               <div className="overflow-hidden rounded-2xl rounded-tr-md bg-[#007AFF]">
                 {/* OG image */}
-                <div className="relative aspect-square overflow-hidden bg-[#06080d]">
+                <div className="relative h-[200px] overflow-hidden bg-[#06080d]">
                   {ogImage ? (
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img

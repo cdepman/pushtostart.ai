@@ -133,7 +133,7 @@ function NewSitePageInner() {
               0, 0, ogSize, ogSize
             );
 
-            setOgImage(crop.toDataURL("image/png"));
+            setOgImage(crop.toDataURL("image/jpeg", 0.85));
           } catch {
             // Screenshot failed — non-fatal, will use default OG
           }
@@ -189,7 +189,6 @@ function NewSitePageInner() {
           title: title || slug,
           description,
           sourceCode: scanResult?.fixedCode || code,
-          ogImage: ogImage || undefined,
         }),
       });
 
@@ -206,6 +205,15 @@ function NewSitePageInner() {
           setErrors({ general: data.error || "Launch failed" });
         }
         return;
+      }
+
+      // Upload OG image separately (non-blocking, don't fail deploy)
+      if (ogImage) {
+        fetch("/api/og/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug, image: ogImage }),
+        }).catch(() => {});
       }
 
       setDeployResult({ url: data.url, slug });

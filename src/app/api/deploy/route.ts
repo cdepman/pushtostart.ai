@@ -11,7 +11,7 @@ import {
   createDeployment,
   deleteSite,
 } from "@/lib/db/queries";
-import { uploadSiteToR2, uploadOgImageToR2, deleteSiteFromR2 } from "@/lib/cloudflare/r2";
+import { uploadSiteToR2, deleteSiteFromR2 } from "@/lib/cloudflare/r2";
 import { SITES_DOMAIN, MAX_SITES_FREE_TIER } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const { slug, title, description, sourceCode, showcased, ogImage } = body;
+  const { slug, title, description, sourceCode, showcased } = body;
 
   // Validate input
   const errors = validateDeployInput({ slug, title, sourceCode });
@@ -113,17 +113,6 @@ export async function POST(req: NextRequest) {
     // Upload to R2 — if this fails, roll back the DB records
     try {
       await uploadSiteToR2(slug, wrappedHtml);
-
-      // Upload OG image if provided (base64 data URL)
-      if (ogImage && typeof ogImage === "string") {
-        try {
-          const base64Data = ogImage.replace(/^data:image\/\w+;base64,/, "");
-          const imageBuffer = Buffer.from(base64Data, "base64");
-          await uploadOgImageToR2(slug, imageBuffer);
-        } catch (ogError) {
-          console.error("OG image upload failed (non-fatal):", ogError);
-        }
-      }
     } catch (r2Error) {
       console.error("R2 upload failed, rolling back DB:", r2Error);
       if (!isRedeploy) {
